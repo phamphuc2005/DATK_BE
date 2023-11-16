@@ -41,7 +41,7 @@ class UserController {
             const device = await UserSystem.findOne({deviceID: id, userID: userID});
 
             if(!system || !device || device.trash == 1) 
-                return res.json({message: 'you are not allowed to access or not device'});
+                return res.json({message: 'Bạn không có quyền truy cập hoặc không có thiết bị!'});
 
             return res.json(system);
 
@@ -59,9 +59,9 @@ class UserController {
             const device = await UserSystem.findOne({deviceID: id, userID: userID});
 
             if(!system || !device || device.trash == 1) 
-                return res.json({message: 'you are not allowed to access'});
+                return res.json({message: 'Bạn không có quyền truy cập!'});
             else if(!system || system?.state == false)
-                return res.json({message: 'System is off now'});
+                return res.json({message: 'Thiết bị đã tắt!'});
             
             const params = await Param.find({systemID: system._id}).sort({ createdAt: -1 }).limit(1);
 
@@ -88,7 +88,7 @@ class UserController {
             const device = await UserSystem.findOne({deviceID: id, userID: userID});
 
             if(!system || !device) 
-                return res.json({message: 'you are not allowed to access'});
+                return res.json({message: 'Bạn không có quyền truy cập!'});
 
             // if(!state) state = system.state;
             console.log(state,'--------------------', system.state)
@@ -112,7 +112,7 @@ class UserController {
 
            
             
-            return res.json('just changed state!');
+            return res.json('Đã thay đổi trạng thái!');
            
 
         }catch(err) {
@@ -129,15 +129,15 @@ class UserController {
             const device = await UserSystem.findOne({deviceID: id, userID: userID});
 
             if(!system || !device) 
-                return res.json({message: 'you are not allowed to access'});
+                return res.json({message: 'Bạn không có quyền truy cập!'});
 
             if(!name)
-                return res.json({message: 'missing param'});
+                return res.json({message: 'Thiếu dữ liệu!'});
             
             let nSystem = await System.findOneAndUpdate({deviceID: id}, {name: name});
 
             if(!nSystem)
-                return res.json({message:'update failed'});
+                return res.json({message:'Thất bại!'});
             
             nSystem = await System.findOne({deviceID: id});
             return res.json(nSystem);
@@ -154,7 +154,7 @@ class UserController {
 
             const user = new UserDTO(await User.findById(userID));
             if(!user)
-                return res.json({message: 'user does not exist'});
+                return res.json({message: 'Người dùng không tồn tại!'});
 
             const sysCount = await UserSystem.find({userID: userID}).count();
             user.count = sysCount;
@@ -175,10 +175,10 @@ class UserController {
 
             const user = new UserDTO(await User.findById(userID));
             if(!user)
-                return res.json({message: 'user does not exist'});
+                return res.json({message: 'Người dùng không tồn tại!'});
 
-            const nUser = await User.findOneAndUpdate({_id: userID}, body)
-            if(!nUser) return res.json({message: 'update failed'});
+            let nUser = await User.findOneAndUpdate({_id: userID}, body)
+            if(!nUser) return res.json({message: 'Thất bại!'});
 
             nUser = await User.findById(userID);
             return res.json(new UserDTO(nUser));

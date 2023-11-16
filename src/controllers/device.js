@@ -12,11 +12,11 @@ class DeviceController {
             const body = req.body;
             
             if(body.deviceID == '' || !body.deviceID || body.name == '' || !body.name)
-            return res.json({message: 'invalid input'});
+            return res.json({message: 'Thiếu dữ liệu!'});
 
             const deviceCheck = await UserSystem.findOne({deviceID: body.deviceID, userID:body.userID});
             if(deviceCheck) {
-                return res.json({message: 'deviceID existed'});
+                return res.json({message: 'Mã thiết bị đã tồn tại!'});
             } else {
                 const systemCheck = await System.findOne({deviceID: body.deviceID});
                 if (systemCheck) {
@@ -25,7 +25,7 @@ class DeviceController {
                         userID: body.userID
                     });
 
-                    if(!device) return res.json({message: 'cannot create device'});
+                    if(!device) return res.json({message: 'Không thể tạo mới thiết bị!'});
         
                     return res.json({device: device});
                 } else {
@@ -39,7 +39,7 @@ class DeviceController {
                         userID: body.userID
                     });
         
-                    if(!device || !system) return res.json({message: 'cannot create device'});
+                    if(!device || !system) return res.json({message: 'Không thể tạo mới thiết bị!'});
         
                     return res.json({device: device});
                 }
@@ -56,10 +56,10 @@ class DeviceController {
             const body = req.body;
             
             if(body.id == '' || !body.id)
-            return res.json({message: 'invalid input'});
+            return res.json({message: 'Thiếu dữ liệu!'});
 
             const device = await UserSystem.findOneAndUpdate({deviceID: body.id, userID: body.userID}, {trash: 1});
-            if(!device) console.log("Move device to trash failed!");
+            if(!device) console.log("Thất bại!");
 
             return res.json({device: device});
         }catch(err){
@@ -87,10 +87,10 @@ class DeviceController {
             const body = req.body;
             
             if(body.id == '' || !body.id)
-            return res.json({message: 'invalid input'});
+            return res.json({message: 'Thiếu dữ liệu!'});
 
             const device = await UserSystem.findOneAndUpdate({deviceID: body.id, userID: body.userID}, {trash: 0});
-            if(!device) console.log("Restore device failed!");
+            if(!device) console.log("Khôi phục thất bại!");
 
             return res.json({device: device});
         }catch(err){
@@ -104,15 +104,15 @@ class DeviceController {
             const body = req.body;
             
             if(body.id == '' || !body.id || body.userID == '' || !body.userID)
-            return res.json({message: 'invalid input'});
+            return res.json({message: 'Thiếu dữ liệu!'});
 
             const device = await UserSystem.findOneAndDelete({deviceID: body.id, userID: body.userID});
-            if(!device) console.log("Delete device failed!");
+            if(!device) console.log("Thất bại!");
 
             const deviceExist = await UserSystem.findOne({deviceID: body.id})
             if (!deviceExist) {
                 const system = await System.findOneAndDelete({deviceID: body.id});
-                if(!system) console.log("Delete device failed!");
+                if(!system) console.log("Thất bại!");
             }
 
             return res.json({data: 'OK'});
