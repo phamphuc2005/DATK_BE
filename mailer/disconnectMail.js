@@ -1,26 +1,11 @@
 require('dotenv').config();
-const mailer = require('./index');
+const disconnectMail = require('./index');
 const System = require('../src/models/system');
 const UserSystem = require('../src/models/user_system');
 const {User} = require('../src/models/user');
 const nodemailer = require("nodemailer");
 
-// module.exports = async function sendWarningMail(sysID) {
-//     try {
-//         const sys = await System.findById(sysID, 'userID');
-//         const user = await User.findById(sys.userID, 'email');
-//         const content = 'Chúng tôi phát hiện thấy thông số bất thường trong nhà bạn. Vui lòng kiểm tra!';
-//         mailer.sendEmail(user.email, 'FIRE WARNING', content, (err, info)=>{
-//             if(err) throw err
-//             console.log('Send mail: ', info.response);
-//         })
-//     } catch (error) {
-//         console.log(error)
-//     }
-
-// }
-
-let sendWarningMail = async (sysID) => {
+let sendMail = async (sysID) => {
     let transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
         port: 587,
@@ -40,7 +25,7 @@ let sendWarningMail = async (sysID) => {
         let info = await transporter.sendMail({
             from: '"FIRE ALARM SYSTEM" <minhpham2001bk@gmail.com>',
             to: user.email,
-            subject: "Cảnh báo nguy hiểm!",
+            subject: "Mất kết nối thiết bị!",
             html: getBodyHTMLMail(device, user)
         });
     })
@@ -49,8 +34,7 @@ let sendWarningMail = async (sysID) => {
 let getBodyHTMLMail = (device, user) => {
     let result = `
             <div>Xin chào,<b> ${user.name}!</b></div>
-            <div>Chúng tôi phát hiện thấy thông số bất thường trong nhà bạn!</div>
-            <div>Xuất hiện thông tin cảnh báo tại:</div>
+            <div>Chúng tôi phát hiện thấy thiết bị sau ngắt kết nối quá lâu!</div>
             <li>Mã thiết bị:<b> ${device.deviceID}</b></li>
             <li>Tên thiết bị:<b> ${device.name}</b></li>
             <div> Vui lòng kiểm tra!</div>
@@ -60,6 +44,6 @@ let getBodyHTMLMail = (device, user) => {
 }
 
 module.exports = {
-    sendWarningMail,
+    sendMail,
     getBodyHTMLMail
 }

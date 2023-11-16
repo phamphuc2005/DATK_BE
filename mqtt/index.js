@@ -3,6 +3,7 @@ const brokerInfo = require('../configs/mqtt.config')
 const System = require('../src/models/system')
 const Param = require('../src/models/param')
 const mailer = require('../mailer/warningMail');
+const disconnectMail = require('../mailer/disconnectMail');
 
 function getMQTTClient(){
     const client = mqtt.connect(
@@ -20,11 +21,33 @@ function use(){
     // let warn = 0;
     const [DataTopic, StateTopic, CommandTopic] = [brokerInfo.DATA_TOPIC, brokerInfo.STATE_TOPIC, brokerInfo.COMMAND_TOPIC];
     console.log('Kết nối!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    client.on('connect', () => {
+    client.on('connect', async () => {
         console.log(`Connected to Broker ${brokerInfo.HOST} port ${brokerInfo.PORT}`)
         client.subscribe([DataTopic, StateTopic], () => {
           console.log(`Subscribed to topic ${DataTopic} and ${StateTopic}`);
         })
+
+        // setInterval(async ()=>{
+        //     try {
+        //         const devices = await System.find();
+        //         devices.forEach(async (device) => {
+        //             const params = await Param.find({systemID: device._id}).sort({ createdAt: -1 }).limit(1);
+        
+        //             let lastParam = (new Date(params[0].createdAt)).getTime();
+        //             let now = (new Date()).getTime();
+        //             if(now - lastParam > 60000) {
+        //                 if (device && (( Date.now() - device.lastMail) > 300000)) {
+        //                     device.lastMail = Date.now();
+        //                     await device.save();
+        //                     await disconnectMail.sendMail(device.deviceID);
+        //                 }
+        //             }
+        //         })
+        //     } catch (error) {
+        //         console.log(error);
+        //     }
+        // }, 5000)
+
       })
       
     // Xử lý dữ liệu gửi tới

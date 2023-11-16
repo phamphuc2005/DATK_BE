@@ -9,6 +9,10 @@ module.exports = function route(app){
 
     app.post('/register', authController.register);
 
+    app.post('/forget-password', authController.forgetPassword);
+
+    app.post('/confirm-code', authController.confirmCode);
+
     app.get('/logout', Authz.verifyToken, authController.logout);
 
     app.post('/change-password', Authz.verifyToken, authController.changePassword);

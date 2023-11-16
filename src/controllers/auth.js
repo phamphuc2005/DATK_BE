@@ -1,7 +1,13 @@
 const {User, UserDTO} = require('../models/user');
 const bcrypt = require('bcrypt')
 const Util = require('../utils')
+const forgetPasswordMail = require('../../mailer/forgetPasswordMail');
+const { Accuracy } = require('../models/accuracy');
 
+let buildRandomNumber = () => {
+    let result = `${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}`;
+    return result;
+}
 class AuthController {
 
     login = async(req, res) =>{
@@ -81,6 +87,56 @@ class AuthController {
 
             nUser = await User.findById(userID);
             return res.json(new UserDTO(nUser));
+
+        }catch(err){
+            console.log(err);
+            return res.json({error: err.message});
+        }
+    }
+
+    forgetPassword = async(req, res) => {
+        try{
+            const [newPassword, email] = [req.body.newPassword, req.body.email];
+
+            const user = await User.findOne({email: email});
+            if(!user) {
+                return res.json({message: 'Email không tồn tại'});
+            } else {
+                let random_number = buildRandomNumber();
+                const code = await Accuracy.create({
+                    email: email,
+                    code: random_number
+                })
+                if(!code) {
+                    return res.json({message: 'Thất bại'});
+                } else {
+                    await forgetPasswordMail.sendForgetMail(email, random_number);
+                    return res.json({email, newPassword})
+                }
+            }
+
+        }catch(err){
+            console.log(err);
+            return res.json({error: err.message});
+        }
+    }
+
+    confirmCode = async(req, res) => {
+        try{
+            const [code, newPassword, email] = [req.body.code, req.body.newPassword, req.body.email];
+
+            const confirmCode = await Accuracy.find({email: email, code: code}).sort({ createdAt: -1 }).limit(1);
+            if (confirmCode && confirmCode.length > 0) {
+                const hashedNewPw = await Util.hashPwd(newPassword); 
+
+                let nUser = await User.findOneAndUpdate({email: email}, {password: hashedNewPw});
+                if(!nUser) return res.json({message: 'Thất bại'})
+    
+                nUser = await User.findOne({email: email});
+                return res.json(new UserDTO(nUser));
+            } else {
+                return res.json({message: 'Mã xác nhận không chính xác!'});
+            }
 
         }catch(err){
             console.log(err);

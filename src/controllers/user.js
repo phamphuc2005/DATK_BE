@@ -61,10 +61,17 @@ class UserController {
             if(!system || !device || device.trash == 1) 
                 return res.json({message: 'you are not allowed to access'});
             else if(!system || system?.state == false)
-                return res.json({message: 'system is off now'});
+                return res.json({message: 'System is off now'});
             
             const params = await Param.find({systemID: system._id}).sort({ createdAt: -1 }).limit(1);
-            return res.json(params[0]);
+
+            let lastParam = (new Date(params[0].createdAt)).getTime();
+            let now = (new Date()).getTime();
+            if(now - lastParam > 60000) {
+                return res.json({message: 'disconnect'});
+            } else {
+                return res.json(params[0]);
+            }
 
         }catch(err) {
             console.log(err);
