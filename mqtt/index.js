@@ -5,27 +5,37 @@ const Param = require('../src/models/param')
 const mailer = require('../mailer/warningMail');
 const disconnectMail = require('../mailer/disconnectMail');
 
+let client;
+
 function getMQTTClient(){
-    const client = mqtt.connect(
-        `mqtt://${brokerInfo.HOST}:${brokerInfo.PORT}`, {
-        clientId: brokerInfo.CLIENT_ID,
-        clean: true,
-        connectTimeout: 4000,
-        reconnectPeriod: 1000
-    });
+    if(!client){
+        client = mqtt.connect(
+            `mqtt://${brokerInfo.HOST}:${brokerInfo.PORT}`, {
+            clientId: brokerInfo.CLIENT_ID,
+            clean: true,
+            connectTimeout: 4000,
+            reconnectPeriod: 1000
+        });
+    }
     return client;
 }
 
 function use(){
-    const client = this.getMQTTClient();
+    let isConnected = false;
+    const client = getMQTTClient();
     // let warn = 0;
     const [DataTopic, StateTopic, CommandTopic] = [brokerInfo.DATA_TOPIC, brokerInfo.STATE_TOPIC, brokerInfo.COMMAND_TOPIC];
     console.log('Kết nối!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
     client.on('connect', async () => {
-        console.log(`Connected to Broker ${brokerInfo.HOST} port ${brokerInfo.PORT}`)
-        client.subscribe([DataTopic, StateTopic], () => {
-          console.log(`Subscribed to topic ${DataTopic} and ${StateTopic}`);
-        })
+        if(!isConnected) {
+            console.log(`Connected to Broker ${brokerInfo.HOST} port ${brokerInfo.PORT}`)
+            client.subscribe([DataTopic, StateTopic], () => {
+              console.log(`Subscribed to topic ${DataTopic} and ${StateTopic}`);
+            })
+            isConnected = true;
+        } else {
+            console.log('Connecting...');
+        }
 
         // setInterval(async ()=>{
         //     try {
