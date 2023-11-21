@@ -1,6 +1,7 @@
 const authController = require('../controllers/auth');
 const userController = require('../controllers/user');
 const deviceController = require('../controllers/device');
+const locationController = require('../controllers/location');
 const Authz = require('../middlewares/authz');
 
 module.exports = function route(app){
@@ -33,7 +34,37 @@ module.exports = function route(app){
 
     app.get('/system-state/:deviceID', Authz.verifyToken, userController.controlState);
 
-    app.get('/system-name/:deviceID', Authz.verifyToken, userController.changeSystemName);
+    app.get('/system-name/:_id', Authz.verifyToken, userController.changeSystemName);
+
+
+    app.post('/add-location', Authz.verifyToken, locationController.addLocation);
+
+    app.get('/list-location', Authz.verifyToken, locationController.getLocations);
+
+    app.post('/join-location', Authz.verifyToken, locationController.joinLocation);
+
+    app.get('/list-request', Authz.verifyToken, locationController.getRequests);
+
+    app.post('/cancel-request', Authz.verifyToken, locationController.cancelRequest);
+
+    app.get('/location/:id', Authz.verifyToken, locationController.getLocation);
+
+    app.get('/member_location/:id', Authz.verifyToken, locationController.getMemberLocation);
+
+    app.get('/request_location/:id', Authz.verifyToken, locationController.getRequestLocation);
+
+    app.post('/accept-request', Authz.verifyToken, locationController.acceptRequest);
+
+    app.post('/deny-request', Authz.verifyToken, locationController.denyRequest);
+
+    app.post('/delete-member', Authz.verifyToken, locationController.deleteMember);
+
+    app.post('/out-location', Authz.verifyToken, locationController.outLocation);
+
+    app.post('/delete-location', Authz.verifyToken, locationController.deleteLocation);
+
+    app.get('/get-devices/:id', Authz.verifyToken, locationController.getDevices);
+
 
     app.post('/add-device', Authz.verifyToken, deviceController.addDevice);
 

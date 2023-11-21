@@ -4,6 +4,7 @@ const {User, UserDTO} = require('../models/user');
 const mqtt = require('../../mqtt');
 const brokerInfo = require('../../configs/mqtt.config');
 const UserSystem = require('../models/user_system');
+const Userlocation = require('../models/user_location');
 
 class UserController {
 
@@ -123,23 +124,23 @@ class UserController {
 
     changeSystemName = async(req, res) => {
         try {
-            const [id, name] = [req.params.deviceID, req.query.name];
+            const [id, name] = [req.params._id, req.query.name];
             const userID = req.user._id;
-            const system = await System.findOne({deviceID: id});
-            const device = await UserSystem.findOne({deviceID: id, userID: userID});
+            const system = await System.findOne({_id: id});
+            const location = await Userlocation.findOne({locationID: system.locationID, userID: userID});
 
-            if(!system || !device) 
+            if(!system || !location) 
                 return res.json({message: 'Bạn không có quyền truy cập!'});
 
             if(!name)
                 return res.json({message: 'Thiếu dữ liệu!'});
             
-            let nSystem = await System.findOneAndUpdate({deviceID: id}, {name: name});
+            let nSystem = await System.findOneAndUpdate({_id: id}, {name: name});
 
             if(!nSystem)
                 return res.json({message:'Thất bại!'});
             
-            nSystem = await System.findOne({deviceID: id});
+            nSystem = await System.findOne({_id: id});
             return res.json(nSystem);
 
         }catch(err) {

@@ -15,6 +15,12 @@ const schema = new Schema(
         lastMail: {
             type: Number, required: true, trim: true, default: 0
         },
+        locationID: {
+            type: Schema.Types.ObjectId, required: true, trim: true, ref: 'Location'
+        },
+        trash: {
+            type: Number, required: true, trim: true, default: 0
+        },
     },
     {
         timestamps: true,

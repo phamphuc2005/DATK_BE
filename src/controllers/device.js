@@ -4,6 +4,7 @@ const Param = require('../models/param');
 const {User, UserDTO} = require('../models/user');
 const mqtt = require('../../mqtt');
 const brokerInfo = require('../../configs/mqtt.config');
+const Userlocation = require('../models/user_location');
 
 class DeviceController {
 
@@ -12,36 +13,30 @@ class DeviceController {
             const body = req.body;
             
             if(body.deviceID == '' || !body.deviceID || body.name == '' || !body.name)
-            return res.json({message: 'Thiếu dữ liệu!'});
+                return res.json({message: 'Thiếu dữ liệu!'});
 
-            const deviceCheck = await UserSystem.findOne({deviceID: body.deviceID, userID:body.userID});
-            if(deviceCheck) {
+            const user = await Userlocation.findOne({userID: body.userID, locationID: body.locationID})
+            if(!user || user.role !== 'Admin')
+                return res.json({message: 'Bạn không có quyền truy cập!'});
+
+            const checkDevice = await System.findOne({deviceID: body.deviceID})
+            if (checkDevice) {
                 return res.json({message: 'Mã thiết bị đã tồn tại!'});
             } else {
-                const systemCheck = await System.findOne({deviceID: body.deviceID});
-                if (systemCheck) {
-                    const device = await UserSystem.create({
-                        deviceID: body.deviceID,
-                        userID: body.userID
-                    });
-
-                    if(!device) return res.json({message: 'Không thể tạo mới thiết bị!'});
-        
-                    return res.json({device: device});
+                const location = await System.findOne({locationID: body.locationID, name:body.name})
+                if (location) {
+                    return res.json({message: 'Tên thiết bị đã tồn tại!'});
                 } else {
-                    const system = await System.create({
+                    const device = System.create({
                         deviceID: body.deviceID,
                         name: body.name,
-                    });
-
-                    const device = await UserSystem.create({
-                        deviceID: body.deviceID,
-                        userID: body.userID
-                    });
-        
-                    if(!device || !system) return res.json({message: 'Không thể tạo mới thiết bị!'});
-        
-                    return res.json({device: device});
+                        locationID: body.locationID,
+                    })
+                    if (!device) {
+                        return res.json({message: 'Thất bại!'});
+                    } else {
+                        return res.json(device);
+                    }
                 }
             }
             
@@ -55,13 +50,24 @@ class DeviceController {
         try{
             const body = req.body;
             
-            if(body.id == '' || !body.id)
-            return res.json({message: 'Thiếu dữ liệu!'});
+            if(body._id == '' || !body._id || body.userID == '' || !body.userID)
+                return res.json({message: 'Thiếu dữ liệu!'});
 
-            const device = await UserSystem.findOneAndUpdate({deviceID: body.id, userID: body.userID}, {trash: 1});
-            if(!device) console.log("Thất bại!");
+            const device = await System.findOne({_id: body._id})
+            if (device) {
+                const user = await Userlocation.findOne({userID: body.userID, locationID:device.locationID})
+                if (!user || user.role !== 'Admin') {
+                    return res.json({message: 'Bạn không có quyền truy cập!'});
+                } else {
+                    device.trash = 1;
+                    await device.save();
+                    return res.json({device: device});
+                }
+            } else {
+                return res.json({message: 'Không có thiết bị!'});
+            }
 
-            return res.json({device: device});
+            
         }catch(err){
             console.log(err);
             return res.json({error: err.message});
