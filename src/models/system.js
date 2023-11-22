@@ -10,7 +10,7 @@ const schema = new Schema(
             type: String, required: true, trim: true
         },
         state: {
-            type: Number, required: true, trim: true, default: 0
+            type: Number, required: true, trim: true, default: 1
         },
         lastMail: {
             type: Number, required: true, trim: true, default: 0

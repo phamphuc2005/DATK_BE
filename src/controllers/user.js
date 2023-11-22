@@ -8,59 +8,14 @@ const Userlocation = require('../models/user_location');
 
 class UserController {
 
-    // create = async(req, res) => {
-    //     const data ={
-    //         name: 'Nhà Tạ Quang Bửu',
-    //         state: false,
-    //         userID: '6400639f35f132cce1d3fe22'
-    //     }
-
-    //     const d = await System.create(data);
-    //     return res.json(d);
-    // }
-
-
-    getAllSystems = async(req, res) =>{
-        try {
-            const userID = req.user._id;
-            const systems = await UserSystem.find({userID: userID, trash: 0});
-            const deviceids = systems.map (systems => systems.deviceID);
-            const devices = await System.find({deviceID: deviceids})
-            return res.json(devices);
-
-        }catch(err) {
-            console.log(err);
-            return res.json({error: err.message});
-        } 
-    }
-
-    getSystem = async(req, res) => {
-        try {
-            const id = req.params.deviceID;
-            const userID = req.user._id;
-            const system = await System.findOne({deviceID: id});
-            const device = await UserSystem.findOne({deviceID: id, userID: userID});
-
-            if(!system || !device || device.trash == 1) 
-                return res.json({message: 'Bạn không có quyền truy cập hoặc không có thiết bị!'});
-
-            return res.json(system);
-
-        }catch(err) {
-            console.log(err);
-            return res.json({error: err.message});
-        }
-    }
-
     getParams = async(req, res) => {
         try {
             const id = req.params.deviceID;
             const userID = req.user._id;
             const system = await System.findOne({deviceID: id});
-            const device = await UserSystem.findOne({deviceID: id, userID: userID});
 
-            if(!system || !device || device.trash == 1) 
-                return res.json({message: 'Bạn không có quyền truy cập!'});
+            if(!system) 
+                return res.json({message: 'Không có thiết bị!'});
             else if(!system || system?.state == false)
                 return res.json({message: 'Thiết bị đã tắt!'});
             
@@ -86,10 +41,9 @@ class UserController {
             const state = req.query.state;
             const userID = req.user._id;
             const system = await System.findOne({deviceID: id});
-            const device = await UserSystem.findOne({deviceID: id, userID: userID});
 
-            if(!system || !device) 
-                return res.json({message: 'Bạn không có quyền truy cập!'});
+            if(!system) 
+                return res.json({message: 'Không có thiết bị!'});
 
             // if(!state) state = system.state;
             console.log(state,'--------------------', system.state)
@@ -156,9 +110,6 @@ class UserController {
             const user = new UserDTO(await User.findById(userID));
             if(!user)
                 return res.json({message: 'Người dùng không tồn tại!'});
-
-            const sysCount = await UserSystem.find({userID: userID}).count();
-            user.count = sysCount;
 
             return res.json(user);
 

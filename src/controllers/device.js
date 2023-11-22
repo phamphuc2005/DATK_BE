@@ -7,6 +7,54 @@ const brokerInfo = require('../../configs/mqtt.config');
 const Userlocation = require('../models/user_location');
 
 class DeviceController {
+    
+    getDevices = async(req, res) =>{
+        try {
+            const _id = req.params.id;
+            const userID = req.user._id;
+            if (_id === 'All') {
+                let devices = []
+                const locations = await Userlocation.find({userID: userID, role:{$ne: 'Candidate'}})
+                await Promise.all(
+                    locations.map(async(location)=>{
+                        const device = await System.find({locationID: location.locationID, trash: 0}).populate('locationID');
+                        devices = devices.concat(device)
+                    })
+                )
+                return res.json(devices);
+            } else {
+                const user = await Userlocation.findOne({locationID: _id, userID: userID, role:{$ne: 'Candidate'}});
+                if (!user) {
+                    return res.json({message: 'Bạn không có quyền truy cập!'});
+                } else {
+                    const devices = await System.find({locationID: _id, trash: 0}).populate('locationID');
+                    return res.json(devices);
+                }
+            }
+
+        }catch(err) {
+            console.log(err);
+            return res.json({error: err.message});
+        } 
+    }
+
+    getDevice = async(req, res) => {
+        try {
+            const id = req.params.deviceID;
+            const userID = req.user._id;
+            const system = await System.findOne({deviceID: id}).populate('locationID');
+            const user = await Userlocation.findOne({locationID: system.locationID, userID: userID});
+
+            if(!system || !user) 
+                return res.json({message: 'Bạn không có quyền truy cập hoặc không có thiết bị!'});
+
+            return res.json(system);
+
+        }catch(err) {
+            console.log(err);
+            return res.json({error: err.message});
+        }
+    }
 
     addDevice = async(req, res) =>{
         try{
@@ -76,11 +124,16 @@ class DeviceController {
 
     getTrash = async(req, res) =>{
         try {
+            const _id = req.params.id;
             const userID = req.user._id;
-            const systems = await UserSystem.find({userID: userID, trash: 1});
-            const deviceids = systems.map (systems => systems.deviceID);
-            const devices = await System.find({deviceID: deviceids})
-            return res.json(devices);
+            const user = await Userlocation.findOne({locationID: _id, userID: userID});
+            if (!user) {
+                return res.json({message: 'Bạn không có quyền truy cập!'});
+            } else {
+                const devices = await System.find({locationID: _id, trash: 1})
+                return res.json(devices);
+            }
+
 
         }catch(err) {
             console.log(err);
@@ -92,13 +145,22 @@ class DeviceController {
         try{
             const body = req.body;
             
-            if(body.id == '' || !body.id)
-            return res.json({message: 'Thiếu dữ liệu!'});
+            if(body._id == '' || !body._id || body.userID == '' || !body.userID)
+                return res.json({message: 'Thiếu dữ liệu!'});
 
-            const device = await UserSystem.findOneAndUpdate({deviceID: body.id, userID: body.userID}, {trash: 0});
-            if(!device) console.log("Khôi phục thất bại!");
-
-            return res.json({device: device});
+            const device = await System.findOne({_id: body._id})
+            if (device) {
+                const user = await Userlocation.findOne({userID: body.userID, locationID:device.locationID})
+                if (!user || user.role !== 'Admin') {
+                    return res.json({message: 'Bạn không có quyền truy cập!'});
+                } else {
+                    device.trash = 0;
+                    await device.save();
+                    return res.json({device: device});
+                }
+            } else {
+                return res.json({message: 'Không có thiết bị!'});
+            }
         }catch(err){
             console.log(err);
             return res.json({error: err.message});
@@ -109,19 +171,22 @@ class DeviceController {
         try{
             const body = req.body;
             
-            if(body.id == '' || !body.id || body.userID == '' || !body.userID)
-            return res.json({message: 'Thiếu dữ liệu!'});
+            if(body._id == '' || !body._id || body.userID == '' || !body.userID)
+                return res.json({message: 'Thiếu dữ liệu!'});
 
-            const device = await UserSystem.findOneAndDelete({deviceID: body.id, userID: body.userID});
-            if(!device) console.log("Thất bại!");
-
-            const deviceExist = await UserSystem.findOne({deviceID: body.id})
-            if (!deviceExist) {
-                const system = await System.findOneAndDelete({deviceID: body.id});
-                if(!system) console.log("Thất bại!");
+            const device = await System.findOne({_id: body._id})
+            if (device) {
+                const user = await Userlocation.findOne({userID: body.userID, locationID:device.locationID})
+                if (!user || user.role !== 'Admin') {
+                    return res.json({message: 'Bạn không có quyền truy cập!'});
+                } else {
+                    await Param.deleteMany({systemID: device._id})
+                    await device.delete();
+                    return res.json({data: 'OK'});
+                }
+            } else {
+                return res.json({message: 'Không có thiết bị!'});
             }
-
-            return res.json({data: 'OK'});
         }catch(err){
             console.log(err);
             return res.json({error: err.message});
