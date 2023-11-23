@@ -80,14 +80,26 @@ class LocationController {
     getLocations = async(req, res) =>{
         try {
             const userID = req.user._id;
-            const userLocations = await UserLocation.find({ userID: userID, role:{$ne: 'Candidate'}}).populate('locationID');
-            const locations = userLocations.map(userLocation => ({
-                _id: userLocation.locationID._id,
-                locationID: userLocation.locationID.locationID,
-                name: userLocation.locationID.name,
-                role: userLocation.role
-            }));
-            return res.json(locations);
+            const role = req.params.role;
+            if (role === 'All') {
+                const userLocations = await UserLocation.find({ userID: userID, role:{$ne: 'Candidate'}}).populate('locationID');
+                const locations = userLocations.map(userLocation => ({
+                    _id: userLocation.locationID._id,
+                    locationID: userLocation.locationID.locationID,
+                    name: userLocation.locationID.name,
+                    role: userLocation.role
+                }));
+                return res.json(locations);
+            } else {
+                const userLocations = await UserLocation.find({ userID: userID, role: role}).populate('locationID');
+                const locations = userLocations.map(userLocation => ({
+                    _id: userLocation.locationID._id,
+                    locationID: userLocation.locationID.locationID,
+                    name: userLocation.locationID.name,
+                    role: userLocation.role
+                }));
+                return res.json(locations);
+            }
 
         }catch(err) {
             console.log(err);

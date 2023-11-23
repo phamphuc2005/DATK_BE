@@ -118,6 +118,56 @@ class MemberController {
         }
     }
 
+    addMember = async(req, res) => {
+        try {
+            const body = req.body;
+            
+            if(body.locationID == '' || !body.locationID || body.userID == '' || !body.userID || body.email == '' || !body.email)
+                return res.json({message: 'Thiếu dữ liệu!'});
+
+            const location = await Location.findOne({_id: body.locationID})
+            if (!location) {
+                return res.json({message: 'Vị trí không tồn tại!'});
+            } else {
+                const role = await UserLocation.findOne({userID: body.userID, locationID:location._id, role: 'Admin'})
+                if (!role) {
+                    return res.json({message: 'Bạn không có thẩm quyền!'});
+                } else {
+                    const email = await User.findOne({email: body.email})
+                    if (!email) {
+                        return res.json({message: 'Người dùng không tồn tại!'});
+                    } else {
+                        const user = await UserLocation.findOne({locationID: body.locationID, userID: email._id})
+                        if (user) {
+                            if (user.role !== 'Candidate') {
+                                return res.json({message: 'Người dùng đã thuộc vị trí!'});
+                            } else {
+                                user.role = 'Member';
+                                await user.save();
+                                return res.json({data: 'OK'});
+                            }
+                        } else {
+                            const member =await UserLocation.create({
+                                userID: email._id,
+                                locationID: body.locationID,
+                                role: 'Member'
+                            })
+                            if (!member) {
+                                return res.json({message: 'Thất bại!'});
+                            } else {
+                                return res.json({data: 'OK'});
+                            }
+                        }
+                    }
+                }
+            }
+
+        }catch(err) {
+            console.log(err);
+            return res.json({error: err.message});
+        }
+    }
+
     deleteMember = async(req, res) => {
         try {
             const body = req.body;

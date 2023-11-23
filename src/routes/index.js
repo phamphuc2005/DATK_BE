@@ -37,7 +37,7 @@ module.exports = function route(app){
 
     app.post('/add-location', Authz.verifyToken, locationController.addLocation);
 
-    app.get('/list-location', Authz.verifyToken, locationController.getLocations);
+    app.get('/list-location/:role', Authz.verifyToken, locationController.getLocations);
 
     app.post('/join-location', Authz.verifyToken, locationController.joinLocation);
 
@@ -60,6 +60,8 @@ module.exports = function route(app){
     app.post('/accept-request', Authz.verifyToken, memberController.acceptRequest);
 
     app.post('/deny-request', Authz.verifyToken, memberController.denyRequest);
+
+    app.post('/add-member', Authz.verifyToken, memberController.addMember);
 
     app.post('/delete-member', Authz.verifyToken, memberController.deleteMember);
 
