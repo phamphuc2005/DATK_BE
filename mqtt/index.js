@@ -39,18 +39,23 @@ function use(){
 
         // setInterval(async ()=>{
         //     try {
-        //         const devices = await System.find();
+        //         const devices = await System.find({trash: 0});
         //         devices.forEach(async (device) => {
         //             const params = await Param.find({systemID: device._id}).sort({ createdAt: -1 }).limit(1);
-        
-        //             let lastParam = (new Date(params[0].createdAt)).getTime();
-        //             let now = (new Date()).getTime();
-        //             if(now - lastParam > 60000) {
-        //                 if (device && (( Date.now() - device.lastMail) > 300000)) {
-        //                     device.lastMail = Date.now();
-        //                     await device.save();
-        //                     await disconnectMail.sendMail(device.deviceID);
+        //             if (params.length!==0) {
+        //                 let lastParam = (new Date(params[0].createdAt)).getTime();
+        //                 let now = (new Date()).getTime();
+        //                 if(now - lastParam > 60000) {
+        //                     if (device && (( Date.now() - device.lastMail) > 300000)) {
+        //                         device.lastMail = Date.now();
+        //                         await device.save();
+        //                         await disconnectMail.sendMail(device.deviceID);
+        //                     }
         //                 }
+        //             } else {
+        //                 device.lastMail = Date.now();
+        //                 await device.save();
+        //                 await disconnectMail.sendMail(device.deviceID);
         //             }
         //         })
         //     } catch (error) {
@@ -83,7 +88,7 @@ function use(){
                 // Đánh giá độ nguy hiểm theo độ ưu tiên fire > gas > temp and humi
 
                 // Lưu dữ liệu vào db
-                const device = await System.findOne({deviceID: sysID});
+                const device = await System.findOne({deviceID: sysID, trash: 0});
                 if (device) {
                     const nData = {
                         fire: fire, temp: temp,

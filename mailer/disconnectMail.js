@@ -1,7 +1,7 @@
 require('dotenv').config();
 const disconnectMail = require('./index');
 const System = require('../src/models/system');
-const UserSystem = require('../src/models/user_system');
+const UserLocation = require('../src/models/user_location');
 const {User} = require('../src/models/user');
 const nodemailer = require("nodemailer");
 
@@ -17,8 +17,8 @@ let sendMail = async (sysID) => {
     });
 
     const device = await System.findOne({deviceID: sysID});
-    const users = await UserSystem.find({deviceID: sysID});
-    const userids = users.map (users => users.userID);
+    const locations = await UserLocation.find({locationID: device.locationID});
+    const userids = locations.map (location => location.userID);
     const user = await User.find({_id: userids})
 
     user.forEach(async (user) => {
