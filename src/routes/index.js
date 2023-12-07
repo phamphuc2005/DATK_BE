@@ -3,6 +3,7 @@ const userController = require('../controllers/user');
 const deviceController = require('../controllers/device');
 const locationController = require('../controllers/location');
 const memberController = require('../controllers/member');
+const noticeController = require('../controllers/notice');
 const Authz = require('../middlewares/authz');
 
 module.exports = function route(app){
@@ -87,6 +88,12 @@ module.exports = function route(app){
     
     app.post('/statistic/:deviceID', Authz.verifyToken, deviceController.getStatistic);
 
+    ////////////////////////////////////////////////////////////////////////////////////////
 
+    app.get('/list-notice', Authz.verifyToken, noticeController.getNotice);
+
+    app.post('/read-notice', Authz.verifyToken, noticeController.readNotice);
+
+    app.post('/delete-notice', Authz.verifyToken, noticeController.deleteNotice);
 }
 

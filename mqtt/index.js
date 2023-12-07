@@ -2,8 +2,11 @@ const mqtt = require('mqtt');
 const brokerInfo = require('../configs/mqtt.config')
 const System = require('../src/models/system')
 const Param = require('../src/models/param')
+const Notice = require('../src/models/notice')
 const mailer = require('../mailer/warningMail');
 const disconnectMail = require('../mailer/disconnectMail');
+const { User } = require('../src/models/user');
+const Userlocation = require('../src/models/user_location');
 
 let client;
 
@@ -37,31 +40,58 @@ function use(){
             console.log('Connecting...');
         }
 
-        // setInterval(async ()=>{
-        //     try {
-        //         const devices = await System.find({trash: 0});
-        //         devices.forEach(async (device) => {
-        //             const params = await Param.find({systemID: device._id}).sort({ createdAt: -1 }).limit(1);
-        //             if (params.length!==0) {
-        //                 let lastParam = (new Date(params[0].createdAt)).getTime();
-        //                 let now = (new Date()).getTime();
-        //                 if(now - lastParam > 60000) {
-        //                     if (device && (( Date.now() - device.lastMail) > 300000)) {
-        //                         device.lastMail = Date.now();
-        //                         await device.save();
-        //                         await disconnectMail.sendMail(device.deviceID);
-        //                     }
-        //                 }
-        //             } else {
-        //                 device.lastMail = Date.now();
-        //                 await device.save();
-        //                 await disconnectMail.sendMail(device.deviceID);
-        //             }
-        //         })
-        //     } catch (error) {
-        //         console.log(error);
-        //     }
-        // }, 5000)
+        setInterval(async ()=>{
+            try {
+                const devices = await System.find({trash: 0}).populate('locationID');
+                devices.forEach(async (device) => {
+                    const params = await Param.find({systemID: device._id}).sort({ createdAt: -1 }).limit(1);
+                    if (params.length!==0) {
+                        let lastParam = (new Date(params[0].createdAt)).getTime();
+                        let now = (new Date()).getTime();
+                        if(now - lastParam > 60000) {
+                            // if (device && (( Date.now() - device.lastMail) > 300000)) {
+                            //     device.lastMail = Date.now();
+                            //     await device.save();
+                            //     await disconnectMail.sendMail(device.deviceID);
+                            // }
+
+                            // const users = await Userlocation.find({locationID: device.locationID._id});
+                            // users.length!==0 && users.forEach(async user => {
+                            //     const lastNotice = await Notice.find({userID: user.userID, deviceID: device._id}).sort({ createdAt: -1 }).limit(1);
+                            //     if(lastNotice.length!==0) {
+                            //         let last = (new Date(lastNotice[0].createdAt)).getTime();
+                            //         if (now - last > 30000) {
+                            //             await Notice.create({
+                            //                 userID: user.userID,
+                            //                 content: `Tại ${device.locationID.name}, ${device.name} ngắt kết nối quá lâu!`,
+                            //                 deviceID: device._id
+                            //             })
+                            //         } 
+                            //     }
+                            // });
+                            
+                        }
+                    } 
+                    // else {
+                        // if (device && (( Date.now() - device.lastMail) > 300000)) {
+                        //     device.lastMail = Date.now();
+                        //     await device.save();
+                        //     await disconnectMail.sendMail(device.deviceID);
+                        // }
+                        // const users = await Userlocation.find({locationID: device.locationID._id});
+                        // users.forEach(user => {
+                        //     const notice = Notice.create({
+                        //         userID: user.userID,
+                        //         content: `Tại ${device.locationID.name}, ${device.name} ngắt kết nối quá lâu!`
+                        //     })
+                            
+                        // });
+                    // }
+                })
+            } catch (error) {
+                console.log(error);
+            }
+        }, 5000)
 
       })
       
@@ -88,7 +118,7 @@ function use(){
                 // Đánh giá độ nguy hiểm theo độ ưu tiên fire > gas > temp and humi
 
                 // Lưu dữ liệu vào db
-                const device = await System.findOne({deviceID: sysID, trash: 0});
+                const device = await System.findOne({deviceID: sysID, trash: 0}).populate('locationID');
                 if (device) {
                     const nData = {
                         fire: fire, temp: temp,
@@ -115,6 +145,23 @@ function use(){
                         device.lastMail = Date.now();
                         await device.save();
                         await mailer.sendWarningMail(sysID);
+                    }
+
+                    if (device) {
+                        const users = await Userlocation.find({locationID: device.locationID._id});
+                        users.length!==0 && users.forEach(async user => {
+                            const lastNotice = await Notice.find({userID: user.userID, deviceID: device._id}).sort({ createdAt: -1 }).limit(1);
+                            if(lastNotice.length!==0) {
+                                let last = (new Date(lastNotice[0].createdAt)).getTime();
+                                if (now - last > 30000) {
+                                    await Notice.create({
+                                        userID: user.userID,
+                                        content: `Tại ${device.locationID.name}, ${device.name} xuất hiện thông số nguy hiểm!`,
+                                        deviceID: device._id
+                                    })
+                                } 
+                            }
+                        });
                     }
                 }
             

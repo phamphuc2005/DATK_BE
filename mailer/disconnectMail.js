@@ -16,7 +16,7 @@ let sendMail = async (sysID) => {
         },
     });
 
-    const device = await System.findOne({deviceID: sysID});
+    const device = await System.findOne({deviceID: sysID}).populate('locationID');
     const locations = await UserLocation.find({locationID: device.locationID});
     const userids = locations.map (location => location.userID);
     const user = await User.find({_id: userids})
@@ -34,7 +34,7 @@ let sendMail = async (sysID) => {
 let getBodyHTMLMail = (device, user) => {
     let result = `
             <div>Xin chào,<b> ${user.name}!</b></div>
-            <div>Chúng tôi phát hiện thấy thiết bị sau ngắt kết nối quá lâu!</div>
+            <div>Chúng tôi phát hiện thấy tại <b>${device.locationID.name}</b>, thiết bị sau ngắt kết nối quá lâu!</div>
             <li>Mã thiết bị:<b> ${device.deviceID}</b></li>
             <li>Tên thiết bị:<b> ${device.name}</b></li>
             <div> Vui lòng kiểm tra!</div>

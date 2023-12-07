@@ -31,7 +31,7 @@ let sendWarningMail = async (sysID) => {
         },
     });
 
-    const device = await System.findOne({deviceID: sysID});
+    const device = await System.findOne({deviceID: sysID}).populate('locationID');
     const locations = await UserLocation.find({locationID: device.locationID});
     const userids = locations.map (location => location.userID);
     const user = await User.find({_id: userids})
@@ -50,7 +50,7 @@ let getBodyHTMLMail = (device, user) => {
     let result = `
             <div>Xin chào,<b> ${user.name}!</b></div>
             <div>Chúng tôi phát hiện thấy thông số bất thường trong nhà bạn!</div>
-            <div>Xuất hiện thông tin cảnh báo tại:</div>
+            <div><b>${device.locationID.name}</b> xuất hiện cảnh báo tại thiết bị:</div>
             <li>Mã thiết bị:<b> ${device.deviceID}</b></li>
             <li>Tên thiết bị:<b> ${device.name}</b></li>
             <div> Vui lòng kiểm tra!</div>
