@@ -20,13 +20,16 @@ class UserController {
                 return res.json({message: 'Thiết bị đã tắt!'});
             
             const params = await Param.find({systemID: system._id}).sort({ createdAt: -1 }).limit(1);
-
-            let lastParam = (new Date(params[0].createdAt)).getTime();
-            let now = (new Date()).getTime();
-            if(now - lastParam > 60000) {
-                return res.json({message: 'disconnect'});
+            if (params.length > 0) {
+                let lastParam = (new Date(params[0].createdAt)).getTime();
+                let now = (new Date()).getTime();
+                if(now - lastParam > 60000) {
+                    return res.json({message: 'disconnect'});
+                } else {
+                    return res.json(params[0]);
+                }
             } else {
-                return res.json(params[0]);
+                return res.json({message: 'disconnect'});
             }
 
         }catch(err) {
