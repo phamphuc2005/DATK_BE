@@ -21,6 +21,9 @@ const schema = new Schema(
         warning: {
             type: Boolean, required: true, default: false
         },
+        time: {
+            type: Number, required: true, trim: true
+        }
     },
     {
         timestamps: true,

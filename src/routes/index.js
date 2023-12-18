@@ -88,6 +88,8 @@ module.exports = function route(app){
     
     app.post('/statistic/:deviceID', Authz.verifyToken, deviceController.getStatistic);
 
+    app.post('/statistic_time/:deviceID', Authz.verifyToken, deviceController.getStatisticTime);
+
     ////////////////////////////////////////////////////////////////////////////////////////
 
     app.get('/list-notice', Authz.verifyToken, noticeController.getNotice);

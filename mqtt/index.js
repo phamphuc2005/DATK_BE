@@ -123,7 +123,8 @@ function use(){
                     const nData = {
                         fire: fire, temp: temp,
                         humid: humid, gas:gas, 
-                        systemID: (device._id).toString(), warning: warning == 1 ? true : false
+                        systemID: (device._id).toString(), warning: warning == 1 ? true : false,
+                        time: Date.now()
                     }
                     const param = await Param.create(nData);
                     if(!param) console.log('save data of params to database failed');
@@ -152,6 +153,7 @@ function use(){
                         users.length!==0 && users.forEach(async user => {
                             const lastNotice = await Notice.find({userID: user.userID, deviceID: device._id}).sort({ createdAt: -1 }).limit(1);
                             if(lastNotice.length!==0) {
+                                let now = (new Date()).getTime();
                                 let last = (new Date(lastNotice[0].createdAt)).getTime();
                                 if (now - last > 30000) {
                                     await Notice.create({
